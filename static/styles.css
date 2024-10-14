@@ -1,0 +1,120 @@
+.container {
+    display: flex;
+    height: 100vh;
+}
+
+.left-pane, .right-pane {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.left-pane {
+    border-right: 1px solid #ccc;
+}
+
+#pdf-viewer {
+    width: 100%;
+    height: 80vh;
+    border: 1px solid #ccc;
+    padding: 20px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: Arial, sans-serif;
+    line-height: 1.5;
+    background-color: #f9f9f9;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+}
+
+#pdf-viewer br {
+    display: block;
+    content: "";
+    margin-top: 0.5em;
+}
+
+#highlighted-text, #summary {
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    min-height: 100px;
+}
+
+.textLayer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+    opacity: 0.2;
+    line-height: 1.0;
+}
+
+.textLayer > div {
+    color: transparent;
+    position: absolute;
+    white-space: pre;
+    cursor: text;
+    transform-origin: 0% 0%;
+}
+
+.textLayer .highlight {
+    margin: -1px;
+    padding: 1px;
+    background-color: rgb(180, 0, 170);
+    border-radius: 4px;
+}
+
+.textLayer .highlight.selected {
+    background-color: rgb(0, 100, 0);
+}
+
+.loading {
+    text-align: center;
+    font-style: italic;
+    color: #666;
+}
+
+#summary-container {
+    position: relative;
+}
+
+#loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#summary {
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    min-height: 100px;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+
+#summary p {
+    margin-bottom: 15px;
+}
+
+#summary strong {
+    font-weight: bold;
+}
+
+#summary em {
+    font-style: italic;
+}
+
+#summary ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+#summary li {
+    margin-bottom: 5px;
+}

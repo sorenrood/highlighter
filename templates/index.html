@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Summarizer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="left-pane">
+            <h2>Document Viewer</h2>
+            <input type="file" id="file-input" accept=".pdf">
+            <div id="pdf-viewer"></div>
+        </div>
+        <div class="right-pane">
+            <h2>Highlighted Text</h2>
+            <div id="highlighted-text"></div>
+            <h2>More details</h2>
+            <div id="summary-container">
+                <div id="summary"></div>
+                <div id="loading" class="loading" style="display: none;">Generating summary...</div>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
