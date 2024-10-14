@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, render_template
 import os
 from openai import OpenAI
 import logging
+import fitz  # PyMuPDF library for handling PDFs
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -13,21 +14,41 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 def index():
     return render_template('index.html')
 
+@app.route('/api/upload_pdf', methods=['POST'])
+def upload_pdf():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    if file and file.filename.endswith('.pdf'):
+        try:
+            pdf_document = fitz.open(stream=file.read(), filetype="pdf")
+            pages = []
+            for page in pdf_document:
+                text = page.get_text()
+                pages.append(text)
+            return jsonify({"pages": pages})
+        except Exception as e:
+            app.logger.error(f"An error occurred while processing the PDF: {str(e)}")
+            return jsonify({"error": str(e)}), 500
+    else:
+        return jsonify({"error": "Invalid file type. Please upload a PDF."}), 400
+
 @app.route('/api/summarize', methods=['POST'])
 def summarize():
     text = request.json['text']
     app.logger.info(f"Received text to summarize: {text}")
     
     system_prompt = '''
-        You are an advanced summarizer and analyst. When provided with highlighted text from a document, generate a detailed summary that not only captures the main points but also offers insights, ideas, and related information.
+        You are an AI assistant specializing in providing deeper context, explanations, and relevant information on specific topics. When a user highlights a sentence or topic, your task is to help them explore it further. Use the following approach:
 
-        Your response should:
-
-        - Summarize the highlighted text concisely, capturing key ideas and themes.
-        - Analyze the content by providing additional context or exploring the significance of the main points.
-        - Suggest ideas or thoughts related to the content, potentially expanding on the concepts discussed or connecting them to broader topics.
-        - Enrich the summary with relevant information that adds value, such as examples, potential implications, or comparisons to similar ideas or concepts.
-        - Use a thoughtful and engaging tone, as if you’re guiding the user to a deeper understanding of the highlighted material.
+        - Summarize the Basics: Offer a concise explanation of the highlighted topic, covering fundamental concepts and key points.
+        - Contextualize: Provide relevant historical, cultural, or situational context that enhances understanding. If applicable, explain why this topic matters or what implications it has.
+        - Expand: Explore related concepts, relevant examples, or contrasting perspectives. Feel free to provide interesting facts, recent developments, or expert opinions.
+        - Clarify: Simplify complex ideas or technical terms as needed. Anticipate possible areas of confusion and address them proactively.
+        - Engage Further: Suggest questions or subtopics the user might want to explore next. Offer avenues for deeper research or related fields of study.
+        - Always aim to give accurate, insightful, and engaging information that encourages curiosity and learning.
 
         Please respond in a format that is easy to read. Don't just return a block of text.
 

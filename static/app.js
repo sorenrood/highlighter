@@ -2,13 +2,10 @@
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.worker.min.js';
 
 let pdfDoc = null;
-let pageNum = 1;
+let numPages = 0;
 
 function renderPage(num) {
     pdfDoc.getPage(num).then(function(page) {
-        const scale = 1.5;
-        const viewport = page.getViewport({ scale: scale });
-        
         page.getTextContent().then(function(textContent) {
             let lastY, textItems = [];
             const lineHeight = 1.2;
@@ -29,10 +26,16 @@ function renderPage(num) {
             // Convert newlines to <br> tags
             finalString = finalString.replace(/\n/g, '<br>');
 
-            let viewer = document.getElementById('pdf-viewer');
-            viewer.innerHTML = finalString;
-            viewer.style.width = viewport.width + 'px';
-            viewer.style.height = viewport.height + 'px';
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'pdf-page';
+            pageDiv.innerHTML = `<h3>Page ${num}</h3>${finalString}`;
+
+            document.getElementById('pdf-viewer').appendChild(pageDiv);
+
+            // Load next page if available
+            if (num < numPages) {
+                renderPage(num + 1);
+            }
         });
     });
 }
@@ -50,7 +53,9 @@ document.getElementById('file-input').addEventListener('change', function(e) {
 
         pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
             pdfDoc = pdf;
-            renderPage(pageNum);
+            numPages = pdf.numPages;
+            document.getElementById('pdf-viewer').innerHTML = ''; // Clear previous content
+            renderPage(1);
         });
     };
     fileReader.readAsArrayBuffer(file);
