@@ -39,20 +39,8 @@ def upload_pdf():
 def summarize():
     text = request.json['text']
     app.logger.info(f"Received text to summarize: {text}")
-    
-    system_prompt = '''
-        You are an AI assistant specializing in providing deeper context, explanations, and relevant information on specific topics. When a user highlights a sentence or topic, your task is to help them explore it further. Use the following approach:
 
-        - Summarize the Basics: Offer a concise explanation of the highlighted topic, covering fundamental concepts and key points.
-        - Contextualize: Provide relevant historical, cultural, or situational context that enhances understanding. If applicable, explain why this topic matters or what implications it has.
-        - Expand: Explore related concepts, relevant examples, or contrasting perspectives. Feel free to provide interesting facts, recent developments, or expert opinions.
-        - Clarify: Simplify complex ideas or technical terms as needed. Anticipate possible areas of confusion and address them proactively.
-        - Engage Further: Suggest questions or subtopics the user might want to explore next. Offer avenues for deeper research or related fields of study.
-        - Always aim to give accurate, insightful, and engaging information that encourages curiosity and learning.
-
-        Please respond in a format that is easy to read. Don't just return a block of text.
-
-    '''
+    system_prompt = 'you are an ai assistant that takes text and returns a bit more context based on the text. be brief, but helpful.'
 
     try:
         # Call GPT-4 API to generate summary
