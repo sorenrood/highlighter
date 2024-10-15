@@ -9,9 +9,7 @@ let highlightedRange = null;
 function renderPage(num) {
     console.log(`Rendering page ${num}`);
     pdfDoc.getPage(num).then(function(page) {
-        console.log(`Got page ${num}`);
         page.getTextContent().then(function(textContent) {
-            console.log(`Got text content for page ${num}`);
             let lastY, textItems = [];
             const lineHeight = 1.2;
             
@@ -32,7 +30,6 @@ function renderPage(num) {
             pageDiv.innerHTML = `<h3>Page ${num}</h3>${finalString}`;
 
             document.getElementById('pdf-viewer').appendChild(pageDiv);
-            console.log(`Page ${num} rendered`);
 
             if (num < numPages) {
                 renderPage(num + 1);
@@ -73,12 +70,10 @@ document.getElementById('file-input').addEventListener('change', function(e) {
     fileReader.readAsArrayBuffer(file);
 });
 
-function createFloatingMenu(range) {
+function createFloatingMenu(x, y) {
     if (floatingMenu) {
-        document.body.removeChild(floatingMenu);
+        floatingMenu.remove();
     }
-    
-    highlightedRange = range;
     
     floatingMenu = document.createElement('div');
     floatingMenu.className = 'floating-menu';
@@ -86,23 +81,15 @@ function createFloatingMenu(range) {
     
     document.body.appendChild(floatingMenu);
     
-    document.getElementById('expand-btn').addEventListener('click', handleExpand);
-    
-    positionFloatingMenu();
-}
+    floatingMenu.style.position = 'absolute';
+    floatingMenu.style.left = `${x}px`;
+    floatingMenu.style.top = `${y}px`;
 
-function positionFloatingMenu() {
-    if (!floatingMenu || !highlightedRange) return;
-    
-    const rect = highlightedRange.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    
-    floatingMenu.style.left = `${rect.left}px`;
-    floatingMenu.style.top = `${rect.top + scrollTop - floatingMenu.offsetHeight - 10}px`;
+    document.getElementById('expand-btn').addEventListener('click', handleExpand);
 }
 
 function handleExpand() {
-    let highlightedText = window.getSelection().toString();
+    let highlightedText = window.getSelection().toString().trim();
     if (highlightedText) {
         document.getElementById('highlighted-text').textContent = highlightedText;
         
@@ -118,40 +105,25 @@ function handleExpand() {
             },
             body: JSON.stringify({text: highlightedText}),
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            console.log('Received summary:', data);
             // Hide loading indicator
             document.getElementById('loading').style.display = 'none';
             if (data.summary) {
-                // Replace newlines with <br> tags and preserve other HTML formatting
-                const formattedSummary = data.summary
-                    .replace(/\n/g, '<br>')
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                    .replace(/- (.*?)(?=\n|$)/g, '<li>$1</li>')
-                    .replace(/<li>.*?<\/li>/g, match => `<ul>${match}</ul>`);
-                document.getElementById('summary').innerHTML = formattedSummary;
+                document.getElementById('summary').innerHTML = data.summary;
             } else {
                 document.getElementById('summary').textContent = 'No summary available.';
             }
         })
         .catch((error) => {
             console.error('Error:', error);
-            // Hide loading indicator
             document.getElementById('loading').style.display = 'none';
             document.getElementById('summary').textContent = 'Error fetching summary.';
         });
     }
     if (floatingMenu) {
-        document.body.removeChild(floatingMenu);
+        floatingMenu.remove();
         floatingMenu = null;
-        highlightedRange = null;
     }
 }
 
@@ -161,28 +133,12 @@ document.getElementById('pdf-viewer').addEventListener('mouseup', function(e) {
         let highlightedText = selection.toString().trim();
         
         if (highlightedText) {
-            let range = selection.getRangeAt(0);
-            createFloatingMenu(range);
+            createFloatingMenu(e.pageX, e.pageY);
         } else if (floatingMenu) {
-            document.body.removeChild(floatingMenu);
+            floatingMenu.remove();
             floatingMenu = null;
-            highlightedRange = null;
         }
     }, 10);
-});
-
-// Handle scrolling
-window.addEventListener('scroll', function() {
-    if (floatingMenu && highlightedRange) {
-        positionFloatingMenu();
-    }
-});
-
-// Handle window resize
-window.addEventListener('resize', function() {
-    if (floatingMenu && highlightedRange) {
-        positionFloatingMenu();
-    }
 });
 
 // Remove any existing fallback menus
