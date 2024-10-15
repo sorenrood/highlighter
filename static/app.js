@@ -4,7 +4,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 let pdfDoc = null;
 let numPages = 0;
 let floatingMenu = null;
-let highlightedRange = null;
 
 function renderPage(num) {
     console.log(`Rendering page ${num}`);
@@ -91,11 +90,8 @@ function createFloatingMenu(x, y) {
 function handleExpand() {
     let highlightedText = window.getSelection().toString().trim();
     if (highlightedText) {
-        document.getElementById('highlighted-text').textContent = highlightedText;
-        
         // Show loading indicator
         document.getElementById('loading').style.display = 'block';
-        document.getElementById('summary').textContent = '';
         
         // Call API to get summary
         fetch('/api/summarize', {
@@ -110,21 +106,41 @@ function handleExpand() {
             // Hide loading indicator
             document.getElementById('loading').style.display = 'none';
             if (data.summary) {
-                document.getElementById('summary').innerHTML = data.summary;
+                // Save highlight and summary to local storage
+                saveHighlight(highlightedText, data.summary);
+                displayHighlights(); // Display highlights in the right pane
             } else {
-                document.getElementById('summary').textContent = 'No summary available.';
+                console.error('No summary available.');
             }
         })
         .catch((error) => {
             console.error('Error:', error);
             document.getElementById('loading').style.display = 'none';
-            document.getElementById('summary').textContent = 'Error fetching summary.';
         });
     }
     if (floatingMenu) {
         floatingMenu.remove();
         floatingMenu = null;
     }
+}
+
+function saveHighlight(text, summary) {
+    const highlights = JSON.parse(localStorage.getItem('highlights')) || [];
+    highlights.unshift({ text, summary }); // Add new highlight at the top
+    localStorage.setItem('highlights', JSON.stringify(highlights));
+}
+
+function displayHighlights() {
+    const highlights = JSON.parse(localStorage.getItem('highlights')) || [];
+    const highlightsContainer = document.getElementById('summary');
+    highlightsContainer.innerHTML = ''; // Clear existing highlights
+
+    highlights.forEach(highlight => {
+        const highlightDiv = document.createElement('div');
+        highlightDiv.className = 'highlight-entry';
+        highlightDiv.innerHTML = `<strong>${highlight.text}</strong><br>${highlight.summary}`; // Removed labels
+        highlightsContainer.appendChild(highlightDiv);
+    });
 }
 
 document.getElementById('pdf-viewer').addEventListener('mouseup', function(e) {
@@ -141,12 +157,14 @@ document.getElementById('pdf-viewer').addEventListener('mouseup', function(e) {
     }, 10);
 });
 
-// Remove any existing fallback menus
+// Modify the DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', function() {
+    // Remove any existing fallback menus
     const fallbackMenus = document.querySelectorAll('.floating-menu');
     fallbackMenus.forEach(menu => {
-        if (menu.style.position === 'fixed' && menu.style.top === '10px' && menu.style.right === '10px') {
-            menu.remove();
-        }
+        menu.remove();
     });
+
+    // Show existing highlights on load
+    displayHighlights();
 });

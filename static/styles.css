@@ -101,6 +101,7 @@
     min-height: 100px;
     font-family: Arial, sans-serif;
     line-height: 1.6;
+    overflow-y: auto; /* Allow scrolling if too many highlights */
 }
 
 #summary p {
@@ -180,4 +181,16 @@
 
 body {
     position: relative;
+}
+
+.highlight-entry {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
+.highlight-entry strong {
+    color: #333;
 }
