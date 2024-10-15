@@ -91,7 +91,8 @@ function handleExpand() {
     let highlightedText = window.getSelection().toString().trim();
     if (highlightedText) {
         // Show loading indicator
-        document.getElementById('loading').style.display = 'block';
+        const loadingIndicator = document.getElementById('loading-indicator');
+        loadingIndicator.style.display = 'block';
         
         // Call API to get summary
         fetch('/api/summarize', {
@@ -103,8 +104,6 @@ function handleExpand() {
         })
         .then(response => response.json())
         .then(data => {
-            // Hide loading indicator
-            document.getElementById('loading').style.display = 'none';
             if (data.summary) {
                 // Save highlight and summary to local storage
                 saveHighlight(highlightedText, data.summary);
@@ -115,7 +114,10 @@ function handleExpand() {
         })
         .catch((error) => {
             console.error('Error:', error);
-            document.getElementById('loading').style.display = 'none';
+        })
+        .finally(() => {
+            // Hide loading indicator
+            loadingIndicator.style.display = 'none';
         });
     }
     if (floatingMenu) {

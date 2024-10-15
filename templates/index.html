@@ -17,8 +17,8 @@
         </div>
         <div class="right-pane">
             <h2>Highlight History</h2>
+            <div id="loading-indicator" class="loading-indicator" style="display: none;">Generating note...</div>
             <div id="summary"></div> <!-- This will now display the highlights -->
-            <div id="loading" class="loading" style="display: none;">Generating summary...</div>
         </div>
     </div>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
