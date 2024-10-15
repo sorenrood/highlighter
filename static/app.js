@@ -3,10 +3,15 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 
 let pdfDoc = null;
 let numPages = 0;
+let floatingMenu = null;
+let highlightedRange = null;
 
 function renderPage(num) {
+    console.log(`Rendering page ${num}`);
     pdfDoc.getPage(num).then(function(page) {
+        console.log(`Got page ${num}`);
         page.getTextContent().then(function(textContent) {
+            console.log(`Got text content for page ${num}`);
             let lastY, textItems = [];
             const lineHeight = 1.2;
             
@@ -19,11 +24,7 @@ function renderPage(num) {
             });
 
             let finalString = textItems.join(' ');
-            
-            // Replace multiple newlines with a single one and trim
             finalString = finalString.replace(/\n+/g, '\n').trim();
-            
-            // Convert newlines to <br> tags
             finalString = finalString.replace(/\n/g, '<br>');
 
             const pageDiv = document.createElement('div');
@@ -31,40 +32,77 @@ function renderPage(num) {
             pageDiv.innerHTML = `<h3>Page ${num}</h3>${finalString}`;
 
             document.getElementById('pdf-viewer').appendChild(pageDiv);
+            console.log(`Page ${num} rendered`);
 
-            // Load next page if available
             if (num < numPages) {
                 renderPage(num + 1);
             }
+        }).catch(function(error) {
+            console.error(`Error getting text content for page ${num}:`, error);
         });
+    }).catch(function(error) {
+        console.error(`Error getting page ${num}:`, error);
     });
 }
 
 document.getElementById('file-input').addEventListener('change', function(e) {
+    console.log("File selected");
     let file = e.target.files[0];
     if (file.type !== 'application/pdf') {
         console.error('Error: Not a PDF file');
         return;
     }
 
+    console.log("Reading file");
     let fileReader = new FileReader();
     fileReader.onload = function() {
+        console.log("File read successfully");
         let typedarray = new Uint8Array(this.result);
 
+        console.log("Loading PDF");
         pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+            console.log("PDF loaded successfully");
             pdfDoc = pdf;
             numPages = pdf.numPages;
-            document.getElementById('pdf-viewer').innerHTML = ''; // Clear previous content
+            document.getElementById('pdf-viewer').innerHTML = '';
             renderPage(1);
+        }).catch(function(error) {
+            console.error("Error loading PDF:", error);
         });
     };
     fileReader.readAsArrayBuffer(file);
 });
 
-document.getElementById('pdf-viewer').addEventListener('mouseup', function() {
-    let selection = window.getSelection();
-    let highlightedText = selection.toString();
+function createFloatingMenu(range) {
+    if (floatingMenu) {
+        document.body.removeChild(floatingMenu);
+    }
     
+    highlightedRange = range;
+    
+    floatingMenu = document.createElement('div');
+    floatingMenu.className = 'floating-menu';
+    floatingMenu.innerHTML = '<button id="expand-btn">Expand</button>';
+    
+    document.body.appendChild(floatingMenu);
+    
+    document.getElementById('expand-btn').addEventListener('click', handleExpand);
+    
+    positionFloatingMenu();
+}
+
+function positionFloatingMenu() {
+    if (!floatingMenu || !highlightedRange) return;
+    
+    const rect = highlightedRange.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    
+    floatingMenu.style.left = `${rect.left}px`;
+    floatingMenu.style.top = `${rect.top + scrollTop - floatingMenu.offsetHeight - 10}px`;
+}
+
+function handleExpand() {
+    let highlightedText = window.getSelection().toString();
     if (highlightedText) {
         document.getElementById('highlighted-text').textContent = highlightedText;
         
@@ -110,4 +148,49 @@ document.getElementById('pdf-viewer').addEventListener('mouseup', function() {
             document.getElementById('summary').textContent = 'Error fetching summary.';
         });
     }
+    if (floatingMenu) {
+        document.body.removeChild(floatingMenu);
+        floatingMenu = null;
+        highlightedRange = null;
+    }
+}
+
+document.getElementById('pdf-viewer').addEventListener('mouseup', function(e) {
+    setTimeout(() => {
+        let selection = window.getSelection();
+        let highlightedText = selection.toString().trim();
+        
+        if (highlightedText) {
+            let range = selection.getRangeAt(0);
+            createFloatingMenu(range);
+        } else if (floatingMenu) {
+            document.body.removeChild(floatingMenu);
+            floatingMenu = null;
+            highlightedRange = null;
+        }
+    }, 10);
+});
+
+// Handle scrolling
+window.addEventListener('scroll', function() {
+    if (floatingMenu && highlightedRange) {
+        positionFloatingMenu();
+    }
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    if (floatingMenu && highlightedRange) {
+        positionFloatingMenu();
+    }
+});
+
+// Remove any existing fallback menus
+document.addEventListener('DOMContentLoaded', function() {
+    const fallbackMenus = document.querySelectorAll('.floating-menu');
+    fallbackMenus.forEach(menu => {
+        if (menu.style.position === 'fixed' && menu.style.top === '10px' && menu.style.right === '10px') {
+            menu.remove();
+        }
+    });
 });
