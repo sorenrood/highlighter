@@ -159,6 +159,11 @@ document.getElementById('pdf-viewer').addEventListener('mouseup', function(e) {
     }, 10);
 });
 
+function clearHistory() {
+    localStorage.removeItem('highlights');
+    displayHighlights(); // This will now display an empty list
+}
+
 // Modify the DOMContentLoaded event listener
 document.addEventListener('DOMContentLoaded', function() {
     // Remove any existing fallback menus
@@ -169,4 +174,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Show existing highlights on load
     displayHighlights();
+
+    // Add event listener for clear history button
+    document.getElementById('clear-history').addEventListener('click', clearHistory);
 });

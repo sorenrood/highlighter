@@ -16,9 +16,12 @@
             <div id="pdf-viewer"></div>
         </div>
         <div class="right-pane">
-            <h2>History</h2>
+            <div class="history-header">
+                <h2>History</h2>
+                <button id="clear-history">Clear History</button>
+            </div>
             <div id="loading-indicator" class="loading-indicator" style="display: none;">Generating note...</div>
-            <div id="summary"></div> <!-- This will now display the highlights -->
+            <div id="summary"></div>
         </div>
     </div>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
