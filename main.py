@@ -77,4 +77,4 @@ def test_summary():
         return f"An error occurred: {str(e)}"
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port='0.0.0.0')
