@@ -1,17 +1,38 @@
-from flask import Flask, jsonify, request, render_template
+from flask import Flask, jsonify, request, render_template, redirect, url_for, session
 import os
 from openai import OpenAI
 import logging
 import fitz  # PyMuPDF library for handling PDFs
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Set a secret key for session management
 logging.basicConfig(level=logging.DEBUG)
 
 # Set up OpenAI client
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
+# Simple password (in a real application, use a more secure method)
+SECRET_PASSWORD = os.environ.get("SECRET_PASSWORD")
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form['password'] == SECRET_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        else:
+            return render_template('login.html', error='Invalid password')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
+
 @app.route('/')
 def index():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     return render_template('index.html')
 
 @app.route('/api/upload_pdf', methods=['POST'])
